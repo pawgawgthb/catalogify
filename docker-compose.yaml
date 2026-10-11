@@ -26,7 +26,7 @@ services:
       php:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "-q", "-O", "-", "http://localhost/healthz" ]
+      test: [ "CMD-SHELL", "nginx -t && kill -0 1" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -44,6 +44,25 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
-
+  supervisor:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    working_dir: /var/www/html
+    command: ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini:ro
+      - ./docker/supervisor/supervisord.conf:/etc/supervisor/supervisord.conf:ro
+      - ./docker/supervisor/processes:/etc/supervisor/processes:ro
+    depends_on:
+      php:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "supervisorctl", "-c", "/etc/supervisor/supervisord.conf", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 volumes:
   mysql_data:
