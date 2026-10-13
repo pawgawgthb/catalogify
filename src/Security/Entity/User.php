@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Security\Entity;
 
 use App\Security\Repository\UserRepository;
+use App\Security\Role\Roles;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -25,7 +26,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Uuid $id;
 
     #[ORM\Column(length: 180)]
-    private ?string $email = null;
+    private string $email;
 
     /**
      * @var list<string> The user roles
@@ -37,7 +38,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    private ?string $password = null;
+    private string $password;
 
     public function getId(): Uuid
     {
@@ -63,7 +64,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        if ($this->email === '') {
+            throw new \LogicException('The user email has not been initialized.');
+        }
+
+        return $this->email;
     }
 
     /**
@@ -73,7 +78,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
+        $roles[] = Roles::ROLE_USER->value;
 
         return array_unique($roles);
     }
