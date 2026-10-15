@@ -1,0 +1,4 @@
+services:
+    test.attribute_type_registry:
+        alias: App\DataSource\AttributeType\AttributeTypeRegistry
+        public: true
